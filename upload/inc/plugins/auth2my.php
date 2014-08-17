@@ -17,6 +17,7 @@ if(defined('IN_ADMINCP'))
 	$plugins->add_hook('admin_config_action_handler','auth2my_admin_action');
 	$plugins->add_hook('admin_config_menu','auth2my_admin_config_menu');
 	$plugins->add_hook('admin_load','auth2my_admin');
+	$plugins->add_hook('admin_page_show_login_end','auth2my_show_login');
 }
 
 function auth2my_info() {
@@ -41,7 +42,7 @@ function auth2my_install() {
 			`auth2my_key` char(16) NOT NULL,
 			`auth2my_active` char(3) NOT NULL,
 			PRIMARY KEY (auth2my_key)
-		) Type=MyISAM;
+		) ENGINE=MyISAM;
 	");
 
 	$auth2my_new_key = Google2FA::generate_secret_key();
@@ -61,6 +62,13 @@ function auth2my_uninstall() {
 
 function auth2my_activate() {
 	global $db;
+
+	if(!function_exists('curl_version'))
+	{
+		flash_message('cURL need to be enabled in your server for Auth2My to be installed.', 'error');
+		admin_redirect("index.php?module=config-plugins");
+	}
+
 	$db->update_query("auth2my", array('auth2my_active' => 'yes'));
 
 }
@@ -84,7 +92,7 @@ function auth2my_admin_config_menu(&$admim_menu) {
 	(
 		'id' => 'auth2my',
 		'title' => 'Auth2My',
-		'link' => 'index.php?module=config/auth2my'
+		'link' => 'index.php?module=config-auth2my'
 	);
 
 }
@@ -109,4 +117,16 @@ function auth2my_admin() {
 	$table->output('Auth2My settings:');
 
 	$page->output_footer();
+}
+
+function auth2my_show_login(&$args)
+{
+	global $lang;
+
+	$login_label_width = isset($lang->login_field_width) ? ' style="width: '.((int)$lang->login_field_width+100).'px;"' : '';
+
+	$auth2my = '			<div class="label"'.$login_label_width.'><label for="auth2my">Auth2:</label></div>
+			<div class="field"><input type="password" name="auth2my" id="auth2my" class="text_input" /></div>';
+
+	$args['login_page'] = str_replace('id="password" class="text_input" /></div>', 'id="password" class="text_input" /></div>'.$auth2my, $args['login_page']);
 }
