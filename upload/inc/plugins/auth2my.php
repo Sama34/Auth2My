@@ -10,12 +10,14 @@ if(!defined("IN_MYBB")) {
 	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
 }
 
-require_once MYBB_ROOT."inc/3rdparty/auth2my_class.php";
+if(defined('IN_ADMINCP'))
+{
+	require_once MYBB_ROOT."inc/3rdparty/auth2my_class.php";
 
-$plugins->add_hook('admin_config_action_handler','auth2my_admin_action');
-$plugins->add_hook('admin_config_menu','auth2my_admin_config_menu');
-$plugins->add_hook('admin_load','auth2my_admin');
-$plugins->add_hook('global_start', 'auth2my');
+	$plugins->add_hook('admin_config_action_handler','auth2my_admin_action');
+	$plugins->add_hook('admin_config_menu','auth2my_admin_config_menu');
+	$plugins->add_hook('admin_load','auth2my_admin');
+}
 
 function auth2my_info() {
 	return array(
@@ -26,7 +28,7 @@ function auth2my_info() {
 		'authorsite'    => '',
 		'version'       => '1.0',
 		'guid'          => '116b957286dfd7a34df98169155b39e0',
-		'compatibility' => '16*'
+		'compatibility' => '17*'
 	);
 }
 
@@ -49,11 +51,7 @@ function auth2my_install() {
 function auth2my_is_installed() {
 	global $db;
 
-	if($db->table_exists('auth2my')) {
-		return true;
-	}
-
-	return false;
+	return $db->table_exists('auth2my');
 }
 
 function auth2my_uninstall() {
@@ -112,8 +110,3 @@ function auth2my_admin() {
 
 	$page->output_footer();
 }
-
-function auth2my() {
-
-}
-?>
